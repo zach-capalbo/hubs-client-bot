@@ -30,7 +30,7 @@ class HubsBot {
     context.overridePermissions("https://hubs.link", ['microphone', 'camera'])
   }
 
-  async enterRoom(roomUrl, opts = {}) {
+  async enterRoom(roomUrl, {name = "Hubs Bot"} = {}) {
     await this.browserLaunched
 
     await this.page.goto(roomUrl, {waitUntil: 'networkidle2'})
@@ -60,6 +60,8 @@ class HubsBot {
 
     await this.page.waitFor(2000)
     await pu.clickSelectorClassRegex("button", /enter/)
+
+    this.setName(name)
   }
 
   async setAttribute(attr, val) {
@@ -94,7 +96,7 @@ class HubsBot {
       {
         const DEFAULT_INTERACTABLE = 1 | 2 | 4 | 8
         el.setAttribute("body-helper", { type: 'dynamic',
-          gravity: { x: Math.random() * 6 - 3, y: -9.8, z: Math.random() * 6 - 3 },
+          gravity: { x: 0, y: -9.8, z: 0 },
           angularDamping: 0.01,
           linearDamping: 0.01,
           linearSleepingThreshold: 1.6,
@@ -117,6 +119,25 @@ class HubsBot {
     }
 
     await this.setAttribute('position', {x, y, z})
+  }
+
+  async setName(name) {
+    await this.page.evaluate((name) => {
+      window.APP.store.update({
+        activity: {
+          hasChangedName: true,
+          hasAcceptedProfile: true
+        },
+        profile: {
+          displayName: name
+      }})
+    }, name)
+  }
+
+  async say(message) {
+    await this.page.evaluate((message) => {
+      window.APP.hubChannel.sendMessage(message)
+    }, message)
   }
 }
 
