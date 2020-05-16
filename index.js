@@ -15,25 +15,54 @@ class PageUtils {
   }
 }
 
+class El {
+  constructor(id) {
+
+  }
+}
+
 class HubsBot {
-  constructor({headless = true} = {}) {
+  constructor({headless = true, name = "HubsBot"} = {}) {
     this.headless = headless
     this.browserLaunched = this.launchBrowser()
+    this.name = name
+  }
+
+  async catchAndScreenShot(fn, path="botError.png") {
+    try {
+      await fn()
+    }
+    catch (e) {
+      console.warn("Caught error. Trying to screenshot")
+      this.page.screenshot({path})
+      throw e
+    }
   }
 
   async launchBrowser () {
     this.browser = await puppeteer.launch({headless: this.headless});
     this.page = await this.browser.newPage();
 
+    this.page.on('console', consoleObj => console.log(">> ", consoleObj.text()));
+
     const context = this.browser.defaultBrowserContext();
     context.overridePermissions("https://hubs.mozilla.com", ['microphone', 'camera'])
     context.overridePermissions("https://hubs.link", ['microphone', 'camera'])
   }
 
-  async enterRoom(roomUrl, {name = "Hubs Bot"} = {}) {
+  async enterRoom(roomUrl, {name} = {}) {
     await this.browserLaunched
 
-    await this.page.goto(roomUrl, {waitUntil: 'networkidle2'})
+    if (name)
+    {
+      this.name = name
+    }
+    else
+    {
+      name = this.name
+    }
+
+    await this.page.goto(roomUrl, {waitUntil: 'domcontentloaded'})
     await this.page.waitFor("button")
 
     if (this.headless) {
@@ -78,6 +107,8 @@ class HubsBot {
         scale = '1 1 1',
         position = '0 0 0',
         dynamic = false,
+        gravity = { x: 0, y: -9.8, z: 0 },
+        autoDropTimeout,
       } = opts
       const eggURL = "https://uploads-prod.reticulum.io/files/031dca7b-2bcb-45b6-b2df-2371e71aecb1.glb"
       let el = document.createElement("a-entity")
@@ -86,26 +117,80 @@ class HubsBot {
 
       el.setAttribute('scale', scale)
       el.setAttribute('position', position)
-      el.setAttribute('media-loader', {src: url, resolve: true, fitToBox: true})
+      el.setAttribute('media-loader', {src: url, resolve: true, fitToBox: false})
       el.setAttribute('networked', {template: '#interactable-media'})
       document.querySelector('a-scene').append(el)
 
-      await loaded
-
       if (dynamic)
       {
-        const DEFAULT_INTERACTABLE = 1 | 2 | 4 | 8
-        el.setAttribute("body-helper", { type: 'dynamic',
-          gravity: { x: 0, y: -9.8, z: 0 },
-          angularDamping: 0.01,
-          linearDamping: 0.01,
-          linearSleepingThreshold: 1.6,
-          angularSleepingThreshold: 2.5,
-          collisionFilterMask: DEFAULT_INTERACTABLE
-        });
+        await loaded
+        await new Promise((r,e) => window.setTimeout(r, 200))
+
+        async function drop() {
+          console.log("Dropping!")
+          let netEl = await NAF.utils.getNetworkedEntity(el)
+          if (!NAF.utils.isMine(netEl)) await NAF.utils.takeOwnership(netEl)
+
+          netEl.setAttribute('floaty-object', {
+            autoLockOnLoad: false,
+            gravitySpeedLimit: 0,
+            modifyGravityOnRelease: false
+          })
+
+          const DEFAULT_INTERACTABLE = 1 | 2 | 4 | 8
+          netEl.setAttribute("body-helper", {
+            type: 'dynamic',
+            gravity: gravity,
+            angularDamping: 0.01,
+            linearDamping: 0.01,
+            linearSleepingThreshold: 1.6,
+            angularSleepingThreshold: 2.5,
+            collisionFilterMask: DEFAULT_INTERACTABLE
+          });
+
+          const physicsSystem = document.querySelector('a-scene').systems["hubs-systems"].physicsSystem;
+          if (netEl.components["body-helper"].uuid) {
+            physicsSystem.activateBody(netEl.components["body-helper"].uuid);
+          }
+        }
+
+        await drop()
+
+        if (autoDropTimeout)
+        {
+          let dropTimer
+          let lastPosition = new THREE.Vector3()
+          lastPosition.copy(el.object3D.position)
+
+          window.setInterval(async () => {
+            let netEl = await NAF.utils.getNetworkedEntity(el)
+            if (NAF.utils.isMine(netEl)) return
+
+            if (lastPosition.distanceTo(el.object3D.position) > 0.01)
+            {
+              console.log("Moved Resetting")
+              if (typeof dropTimer !== 'undefined') {
+                window.clearTimeout(dropTimer)
+                dropTimer = undefined
+              }
+            }
+            else if (typeof dropTimer === 'undefined')
+            {
+              dropTimer = window.setTimeout(drop, autoDropTimeout)
+            }
+
+            lastPosition.copy(el.object3D.position)
+          }, 100)
+        }
+
+      }
+      else
+      {
+        await loaded
       }
     }, opts)
   }
+
   async goTo(positionOrX, optsOrY, z, opts) {
     let x,y
     if (typeof z === 'undefined') {
