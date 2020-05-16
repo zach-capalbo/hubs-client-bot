@@ -1,0 +1,28 @@
+{
+  "name": "hubs-client-bot",
+  "version": "1.0.0",
+  "description": "A puppeteer-based bot library for mozilla hubs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zach-capalbo/hubs-client-bot.git"
+  },
+  "keywords": [
+    "Hubs",
+    "Bot",
+    "Mozilla",
+    "Hubs"
+  ],
+  "author": "Zach Capalbo",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zach-capalbo/hubs-client-bot/issues"
+  },
+  "homepage": "https://github.com/zach-capalbo/hubs-client-bot#readme",
+  "dependencies": {
+    "puppeteer": "^3.0.4"
+  }
+}
