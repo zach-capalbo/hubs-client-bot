@@ -110,7 +110,6 @@ class HubsBot {
         gravity = { x: 0, y: -9.8, z: 0 },
         autoDropTimeout,
       } = opts
-      const eggURL = "https://uploads-prod.reticulum.io/files/031dca7b-2bcb-45b6-b2df-2371e71aecb1.glb"
       let el = document.createElement("a-entity")
 
       let loaded = new Promise((r, e) => { el.addEventListener('loaded', r, {once: true})})
@@ -121,14 +120,15 @@ class HubsBot {
       el.setAttribute('networked', {template: '#interactable-media'})
       document.querySelector('a-scene').append(el)
 
+      await loaded
+      let netEl = await NAF.utils.getNetworkedEntity(el)
+
       if (dynamic)
       {
-        await loaded
         await new Promise((r,e) => window.setTimeout(r, 200))
-
         async function drop() {
           console.log("Dropping!")
-          let netEl = await NAF.utils.getNetworkedEntity(el)
+
           if (!NAF.utils.isMine(netEl)) await NAF.utils.takeOwnership(netEl)
 
           netEl.setAttribute('floaty-object', {
@@ -184,10 +184,8 @@ class HubsBot {
         }
 
       }
-      else
-      {
-        await loaded
-      }
+
+      return netEl.id
     }, opts)
   }
 
@@ -214,7 +212,8 @@ class HubsBot {
           hasAcceptedProfile: true
         },
         profile: {
-          displayName: name
+          // Prepend (bot) to the name so other users know it's a bot
+          displayName: "bot - " + name
       }})
     }, name)
   }

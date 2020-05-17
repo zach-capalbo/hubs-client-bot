@@ -38,7 +38,6 @@ class ChessBot extends HubsBot {
   async populateBoard() {
     console.log("Populating board")
 
-
     await this.dropPiece("black", "rook", `3.5 1 3`)
     await this.dropPiece("black", "rook", `${3.5 - 7} 1 3`)
 
