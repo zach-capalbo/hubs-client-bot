@@ -81,8 +81,26 @@ class ChessBot extends HubsBot {
       })
       await this.populateBoard()
       await this.goTo({x: -5.0, y: 0, z: -1})
+      await this.say("Let the games begin!")
     })
   }
 }
 
-new ChessBot({headless: true}).runBot("https://hubs.mozilla.com/NA4yYAL/artistic-snow-spot")
+let roomUrl = process.argv[2]
+
+if (!roomUrl)
+{
+  console.error(`
+Usage: node examples/chessbot.js ROOM_URL
+
+ROOM_URL should be a Mozilla Hubs room that you created setup with this scene:
+
+  https://hubs.mozilla.com/scenes/qEa4XwA
+`)
+  process.exit(-1)
+}
+
+new ChessBot({headless: true}).runBot(roomUrl).catch((e) => {
+  console.error("Failed to run. Check botError.png if it exists. Error:", e)
+  process.exit(-1)
+})

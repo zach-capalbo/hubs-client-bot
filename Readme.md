@@ -24,3 +24,25 @@ async function runBot() {
 
 runBot()
 ```
+
+## Running the examples
+
+The best way to run the examples is to clone this repository or download the zip
+file, then use node to run the examples.
+
+```sh
+git clone git@github.com:zach-capalbo/hubs-client-bot.git
+cd hubs-client-bot
+npm install
+node examples/eggbot.js ROOM_URL
+```
+
+However, puppeteer can be tricky to install, and match with the right node
+versions. In this case, docker might be easier to use. Make sure you have docker
+installed first, then you can do
+
+```sh
+git clone git@github.com:zach-capalbo/hubs-client-bot.git
+cd hubs-client-bot
+docker run --rm -ti -v /`pwd`:/src buildkite/puppeteer node //src/examples/eggbot.js ROOM_URL
+```

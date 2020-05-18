@@ -1,8 +1,8 @@
 const {HubsBot} = require('../index.js')
 
-async function run() {
+async function run(roomUrl) {
   eggBot = new HubsBot()
-  await eggBot.enterRoom("https://hub.link/cmPv8xv", {name: "Egg Bot"})
+  await eggBot.enterRoom(roomUrl, {name: "Egg Bot"})
   setInterval(() => {
     eggBot.say("Here's an egg for you!")
     eggBot.spawnObject({
@@ -13,4 +13,20 @@ async function run() {
   }, 5000)
 }
 
-run()
+let roomUrl = process.argv[2]
+
+if (!roomUrl)
+{
+  console.error(`
+Usage: node examples/eggbot.js ROOM_URL
+
+ROOM_URL should be a Mozilla Hubs room that you created, or where the bot will
+be welcome.
+`)
+  process.exit(-1)
+}
+
+run(roomUrl).catch((e) => {
+  console.error("Failed to run. Check botError.png if it exists. Error:", e)
+  process.exit(-1)
+})
