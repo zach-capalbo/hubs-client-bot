@@ -5,7 +5,7 @@ class BrowserLauncher_ {
   constructor() {}
 
   async browser(options) {
-    if (this._browser) return await this._browser()
+    if (this._browser) return await this._browser
 
     if (fs.existsSync("/.dockerenv"))
     {
