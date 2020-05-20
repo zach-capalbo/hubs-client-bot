@@ -30,7 +30,7 @@ be welcome.
   process.exit(-1)
 }
 
-if (process.argv[3] === '--print')
+if (process.argv[2] === '--print' || process.argv[3] === '--print')
 {
   console.log(new HubsBot().asBrowserBot(run).toString())
   process.exit(0)

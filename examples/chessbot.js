@@ -102,7 +102,7 @@ ROOM_URL should be a Mozilla Hubs room that you created setup with this scene:
   process.exit(-1)
 }
 
-if (process.argv[3] === '--print')
+if (process.argv[2] === '--print' || process.argv[3] === '--print')
 {
   console.log(
     new ChessBot().asBrowserBot(bot => bot.runBot()).toString()
