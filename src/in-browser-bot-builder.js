@@ -1,12 +1,13 @@
 const {InBrowserBot} = require('./in-browser-bot.js')
 
 class InBrowserBotBuilder {
-  constructor(baseBot, fn) {
+  constructor(baseBot, fn, ...args) {
     this.actions = []
     this.botProxy = {}
 
     this.fn = fn
     this.baseBot = baseBot
+    this.args = args
   }
   toString({
     includeClassDefinition = true,
@@ -33,7 +34,9 @@ class InBrowserBotBuilder {
 
     lines.push(`var _fn = ${this.fn.toString()};`)
 
-    lines.push(`window.bot = new ${botClassName}(); _fn(window.bot);`)
+    lines.push(`var _args = ${JSON.stringify(this.args)}`)
+
+    lines.push(`window.bot = new ${botClassName}(); _fn(window.bot, ..._args);`)
 
     return lines.join("\n")
   }

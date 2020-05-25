@@ -13,9 +13,12 @@ class InBrowserBot {
       url,
       scale = '1 1 1',
       position = '0 0 0',
+      rotation = '0 0 0',
       dynamic = false,
       gravity = { x: 0, y: -9.8, z: 0 },
       autoDropTimeout,
+      fitToBox = false,
+      pinned = false,
     } = opts
     let el = document.createElement("a-entity")
 
@@ -23,8 +26,10 @@ class InBrowserBot {
 
     el.setAttribute('scale', scale)
     el.setAttribute('position', position)
-    el.setAttribute('media-loader', {src: url, resolve: true, fitToBox: false})
+    el.setAttribute('rotation', rotation)
+    el.setAttribute('media-loader', {src: url, resolve: true, fitToBox})
     el.setAttribute('networked', {template: '#interactable-media'})
+
     document.querySelector('a-scene').append(el)
 
     await loaded
@@ -92,6 +97,11 @@ class InBrowserBot {
 
     }
 
+    if (pinned) {
+      await new Promise((r,e) => window.setTimeout(r, 2000))
+      netEl.setAttribute('pinnable', {pinned})
+    }
+
     return netEl.id
   }
 
@@ -129,6 +139,41 @@ class InBrowserBot {
 
   async changeScene(url) {
     this.props.hubChannel.updateScene(url);
+  }
+
+  async controlHands() {
+    if (this.handsControlled) return
+    document.querySelectorAll('.left-controller,.right-controller').forEach(controller => {
+      const controlsBlacklist = [
+        "tracked-controls",
+        "hand-controls2",
+        "vive-controls",
+        "oculus-touch-controls",
+        "windows-motion-controls",
+        "daydream-controls",
+        "gearvr-controls"
+      ];
+      controlsBlacklist.forEach(controlsComponent => controller.removeAttribute(controlsComponent));
+      controller.removeAttribute('visibility-by-path')
+      controller.setAttribute("visible", true);
+    })
+    this.handsControlled = true
+  }
+
+  async setAvatarLocations({leftHand, rightHand, head})
+  {
+    // await this.controlHands()
+    if (leftHand) {
+      document.querySelector('.left-controller').setAttribute('position', leftHand.position)
+    }
+
+    if (rightHand) {
+      document.querySelector('.right-controller').setAttribute('position', rightHand.position)
+    }
+
+    if (head) {
+      document.querySelector('#avatar-pov-node').setAttribute('rotation', head.rotation)
+    }
   }
 }
 

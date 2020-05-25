@@ -4,11 +4,13 @@ const {InBrowserBot} = require('./in-browser-bot.js')
 const {InBrowserBotBuilder} = require('./in-browser-bot-builder.js')
 
 class PageUtils {
-  constructor(page) {
+  constructor({page, autoLog = true}) {
     this.page = page
+    this.autoLog = autoLog
   }
   async clickSelectorClassRegex(selector, classRegex) {
-    console.log(`Clicking for a ${selector} matching ${classRegex}`)
+    if (this.autoLog) console.log(`Clicking for a ${selector} matching ${classRegex}`)
+
     await this.page.evaluate((selector, classRegex) => {
       classRegex = new RegExp(classRegex)
       let buttons = Array.from(document.querySelectorAll(selector))
@@ -25,10 +27,11 @@ class El {
 }
 
 class HubsBot {
-  constructor({headless = true, name = "HubsBot"} = {}) {
+  constructor({headless = true, name = "HubsBot", autoLog = true} = {}) {
     this.headless = headless
     this.browserLaunched = this.launchBrowser()
     this.name = name
+    this.autoLog = autoLog
 
     for (let method of Object.getOwnPropertyNames(InBrowserBot.prototype))
     {
@@ -68,7 +71,10 @@ class HubsBot {
     this.browser = await BrowserLauncher.browser({headless: this.headless});
     this.page = await this.browser.newPage();
 
-    this.page.on('console', consoleObj => console.log(">> ", consoleObj.text()));
+    if (this.autoLog)
+    {
+      this.page.on('console', consoleObj => console.log(">> ", consoleObj.text()));
+    }
 
     const context = this.browser.defaultBrowserContext();
     context.overridePermissions("https://hubs.mozilla.com", ['microphone', 'camera'])
@@ -99,7 +105,7 @@ class HubsBot {
       await this.page.evaluate(() => { AFRAME.scenes[0].renderer.render = function() {} })
     }
 
-    let pu = new PageUtils(this.page)
+    let pu = new PageUtils(this)
     await pu.clickSelectorClassRegex("button", /entry__action/)
     await this.page.waitFor("input")
     await pu.clickSelectorClassRegex("input", /profile__form-submit/)
@@ -126,8 +132,13 @@ class HubsBot {
     window.APP.hubChannel.channel.on('message', callback)
   }
 
-  asBrowserBot(fn) {
-    return new InBrowserBotBuilder(this, fn)
+  asBrowserBot(fn, ...args) {
+    return new InBrowserBotBuilder(this, fn, ...args)
+  }
+
+  quit() {
+    this.page.close()
+    this.browser.close()
   }
 }
 
