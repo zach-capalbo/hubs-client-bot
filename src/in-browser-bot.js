@@ -165,14 +165,17 @@ class InBrowserBot {
     // await this.controlHands()
     if (leftHand) {
       document.querySelector('.left-controller').setAttribute('position', leftHand.position)
+      document.querySelector('.left-controller').setAttribute('rotation', leftHand.rotation)
     }
 
     if (rightHand) {
       document.querySelector('.right-controller').setAttribute('position', rightHand.position)
+      document.querySelector('.right-controller').setAttribute('rotation', rightHand.rotation)
     }
 
     if (head) {
       document.querySelector('#avatar-pov-node').setAttribute('rotation', head.rotation)
+      document.querySelector('#avatar-pov-node').setAttribute('position', head.position)
     }
   }
 }
