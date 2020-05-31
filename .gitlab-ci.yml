@@ -1,6 +1,7 @@
 image: node:12.17.0
 
 stages:
+  - build
   - deploy
 #
 # test:
@@ -17,13 +18,22 @@ stages:
 #     when: always
 #     paths:
 #       - tests/output
-pages:
-  stage: deploy
+.pages_base: &pages_base
   script:
-    - node install
+    - npm install
     - node ./node_modules/documentation/bin/documentation.js build index.js -f html -o public
   artifacts:
     paths:
       - public
+
+pages_branch:
+  <<: *pages_base
+  stage: build
+  except:
+    - master
+
+pages:
+  stage: deploy
+  <<: *pages_base
   only:
     - master
