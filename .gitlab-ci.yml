@@ -1,0 +1,28 @@
+image: node:12.17.0
+
+stages:
+  - deploy
+#
+# test:
+#   stage: test
+#   image: alekzonder/puppeteer
+#   variables:
+#     HEADLESS: 'true'
+#   script:
+#     - cd tests
+#     - npm install
+#     - ./node_modules/codeceptjs/bin/codecept.js run --debug --steps
+#   artifacts:
+#     expire_in: 1 week
+#     when: always
+#     paths:
+#       - tests/output
+pages:
+  stage: deploy
+  script:
+    - node ./node_modules/documentation/bin/documentation.js build index.js -f html -o public
+  artifacts:
+    paths:
+      - public
+  only:
+    - master

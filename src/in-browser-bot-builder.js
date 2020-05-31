@@ -1,5 +1,9 @@
 const {InBrowserBot} = require('./in-browser-bot.js')
 
+/**
+ Converts a {@link HubsBot} into an {@link InBrowserBot}. This should not be
+ used directly, but rather accessed through {@link HubsBot.asBrowserBot}
+*/
 class InBrowserBotBuilder {
   constructor(baseBot, fn, ...args) {
     this.actions = []
@@ -9,6 +13,11 @@ class InBrowserBotBuilder {
     this.baseBot = baseBot
     this.args = args
   }
+
+  /**
+  Create a string suiteable for copying and pasting into the developer console
+  which can create and run the the associated bot.
+  */
   toString({
     includeClassDefinition = true,
     closure = true

@@ -24,5 +24,8 @@
   "homepage": "https://github.com/zach-capalbo/hubs-client-bot#readme",
   "dependencies": {
     "puppeteer": "^3.0.4"
+  },
+  "devDependencies": {
+    "documentation": "^13.0.0"
   }
 }

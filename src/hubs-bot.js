@@ -26,8 +26,23 @@ class El {
   }
 }
 
+/**
+ * Main class for creating a HubsBot. Dynamically adds all methods from
+ * InBrowserBot, which can be called directly from a HubsBot instance.
+ * @example
+   var bot = new HubsBot();
+   bot.goTo(0, 1, 0) // goTo is a InBrowserBot method, but can be called directly on the HubsBot
+ * @param {Object} opt See below
+ * @param {boolean} opt.headless Set this to false to have puppeteer spawn Chromium window.
+ * @param {string} opt.name Name for the bot to appear as ({@link setName})
+ * @see InBrowserBot
+*/
 class HubsBot {
-  constructor({headless = true, name = "HubsBot", autoLog = true} = {}) {
+  constructor({
+    headless = true,
+    name = "HubsBot",
+    autoLog = true} = {}
+  ) {
     this.headless = headless
     this.browserLaunched = this.launchBrowser()
     this.name = name
@@ -41,6 +56,9 @@ class HubsBot {
     }
   }
 
+  /** Runs a function and takes a screenshot if it fails
+   * @param {Function} fn Function to execut _in the node context._
+  */
   async catchAndScreenShot(fn, path="botError.png") {
     try {
       await fn()
@@ -55,11 +73,21 @@ class HubsBot {
     }
   }
 
-  async evaluate(...args) {
+  /**
+   * Runs a funciton in the browser context
+   * @param {Function} fn Function to evaluate in the browser context
+   * @param args The arguments to be passed to fn. These will be serailized when passed through puppeteer
+  */
+  async evaluate(fn, ...args) {
     await this.browserLaunched
-    return await this.page.evaluate(...args)
+    return await this.page.evaluate(fn, ...args)
   }
 
+  /**
+   * A main-program type wrapper. Runs a function and quits the bot with a
+   * screenshot if the function throws an exception
+   * @param {Function} fn Function to evaluate in the node context
+  */
   exec(fn) {
     this.catchAndScreenShot(() => fn(this)).catch((e) => {
       console.error("Failed to run. Check botError.png if it exists. Error:", e)
@@ -67,6 +95,9 @@ class HubsBot {
     })
   }
 
+  /** Launches the puppeteer browser instance. It is not necessary to call this
+   *  directly in most cases. It will be done automatically when needed.
+  */
   async launchBrowser () {
     this.browser = await BrowserLauncher.browser({headless: this.headless});
     this.page = await this.browser.newPage();
@@ -81,6 +112,11 @@ class HubsBot {
     context.overridePermissions("https://hubs.link", ['microphone', 'camera'])
   }
 
+  /** Enters the room specified, enabling the first microphone and speaker found
+   * @param {string} roomUrl The url of the room to join
+   * @param {Object} opts
+   * @param {string} opts.name Name to set as the bot name when joining the room
+  */
   async enterRoom(roomUrl, {name} = {}) {
     await this.browserLaunched
 
@@ -132,10 +168,25 @@ class HubsBot {
     window.APP.hubChannel.channel.on('message', callback)
   }
 
+  /**
+   * Creates an {@link InBrowserBotBuilder} to allow building a bot for use in the
+   * developer console.
+   * @return {InBrowserBotBuilder} An InBrowserBotBuilder which can be used to
+   * create client-side code to execute `fn`. This code can then be copied and
+   * pasted into the developer console
+   * @param {Function} fn The function to execute in the browser context. The
+            `this` passed to fn will be an InBrowserBot version of this bot. If
+            this bot is a subclass of HubsBot, the subclassed definitions will
+            be injected into the built [InBrowserBot](#inbrowserbot) code.
+   * @param args Arguments to be serialized and passed to fn
+  */
   asBrowserBot(fn, ...args) {
     return new InBrowserBotBuilder(this, fn, ...args)
   }
 
+  /**
+   * Leaves the room and closes the browser instance without exiting node
+  */
   quit() {
     this.page.close()
     this.browser.close()
