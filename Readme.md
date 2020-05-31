@@ -1,5 +1,7 @@
 # Hubs Bot library
 
+[Documentation](https://zach-geek.gitlab.io/hubs-client-bot/)
+
 This is very much work in process, but demonstrates how to make a Mozilla hubs
 bot using puppeteer
 
