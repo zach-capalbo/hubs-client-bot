@@ -1,6 +1,6 @@
 {
   "name": "hubs-client-bot",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A puppeteer-based bot library for mozilla hubs",
   "main": "index.js",
   "scripts": {
@@ -24,5 +24,8 @@
   "homepage": "https://github.com/zach-capalbo/hubs-client-bot#readme",
   "dependencies": {
     "puppeteer": "^3.0.4"
+  },
+  "devDependencies": {
+    "documentation": "^13.0.0"
   }
 }
