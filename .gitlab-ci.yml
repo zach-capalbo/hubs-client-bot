@@ -20,6 +20,7 @@ stages:
 pages:
   stage: deploy
   script:
+    - node install
     - node ./node_modules/documentation/bin/documentation.js build index.js -f html -o public
   artifacts:
     paths:
