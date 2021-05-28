@@ -1,7 +1,11 @@
+if (typeof EventTarget == "undefined") {
+  var EventTarget = Object;
+}
+
 /**
  * Functionality that executes in the context of the browser.
 */
-class InBrowserBot {
+class InBrowserBot extends EventTarget {
   /** Placeholder to not break scripts. InBrowserBots cannot enter or switch rooms */
   enterRoom(room) {
     console.warn("Cannot enter room different room from InBrowserBot")
@@ -253,6 +257,10 @@ class InBrowserBot {
       document.querySelector('#avatar-pov-node').setAttribute('rotation', head.rotation)
       document.querySelector('#avatar-pov-node').setAttribute('position', head.position)
     }
+  }
+
+  installMessageHandlers() {
+    APP.hubChannel.channel.on('message', (m) => console.log(m))
   }
 }
 

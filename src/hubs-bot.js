@@ -1,4 +1,5 @@
 const {URL} = require('url')
+const {EventEmitter} = require('events')
 const {BrowserLauncher} = require('./browser-launcher.js')
 const {InBrowserBot} = require('./in-browser-bot.js')
 const {InBrowserBotBuilder} = require('./in-browser-bot-builder.js')
@@ -8,15 +9,37 @@ class PageUtils {
     this.page = page
     this.autoLog = autoLog
   }
-  async clickSelectorClassRegex(selector, classRegex) {
+  async clickSelectorClassRegex(selector, classRegex, attempts) {
     if (this.autoLog) console.log(`Clicking for a ${selector} matching ${classRegex}`)
+    if (!attempts) attempts = 1;
 
-    await this.page.evaluate((selector, classRegex) => {
-      classRegex = new RegExp(classRegex)
+    while (attempts > 0)
+    {
+      try {
+        await this.page.evaluate((selector, classRegex) => {
+          classRegex = new RegExp(classRegex)
+          let buttons = Array.from(document.querySelectorAll(selector))
+          let enterButton = buttons.find(button => Array.from(button.classList).some(c => classRegex.test(c)))
+          enterButton.click()
+        }, selector, classRegex.toString().slice(1,-1))
+      } catch (e) {
+        if (--attempts === 0) {
+          throw e;
+        }
+        await this.page.waitFor(200)
+      }
+    }
+  }
+
+  async clickSelectorTextRegex(selector, textRegex) {
+    if (this.autoLog) console.log(`Clicking for a ${selector} matching ${textRegex}`)
+
+    await this.page.evaluate((selector, textRegex) => {
+      textRegex = new RegExp(textRegex)
       let buttons = Array.from(document.querySelectorAll(selector))
-      let enterButton = buttons.find(button => Array.from(button.classList).some(c => classRegex.test(c)))
+      let enterButton = buttons.find(button => textRegex.test(button.innerText))
       enterButton.click()
-    }, selector, classRegex.toString().slice(1,-1))
+    }, selector, textRegex.toString().slice(1,-1))
   }
 }
 
@@ -37,12 +60,13 @@ class El {
  * @param {string} opt.name Name for the bot to appear as ({@link setName})
  * @see InBrowserBot
 */
-class HubsBot {
+class HubsBot extends EventEmitter {
   constructor({
     headless = true,
     name = "HubsBot",
     autoLog = true} = {}
   ) {
+    super()
     this.headless = headless
     this.browserLaunched = this.launchBrowser()
     this.name = name
@@ -133,33 +157,51 @@ class HubsBot {
       name = this.name
     }
 
-    await this.page.goto(roomUrl, {waitUntil: 'domcontentloaded'})
-    await this.page.waitFor("button")
+    parsedUrl.searchParams.set("bot", "true")
+
+    await this.page.goto(parsedUrl.toString(), {waitUntil: 'domcontentloaded'})
+
+
+    await this.page.waitFor(() => NAF.connection.isConnected())
 
     if (this.headless) {
       // Disable rendering for headless, otherwise chromium uses a LOT of CPU
       await this.page.evaluate(() => { AFRAME.scenes[0].renderer.render = function() {} })
     }
 
+
     let pu = new PageUtils(this)
-    await pu.clickSelectorClassRegex("button", /entry__action/)
-    await this.page.waitFor("input")
-    await pu.clickSelectorClassRegex("input", /profile__form-submit/)
-    await this.page.waitFor("button:nth-child(2)")
-    await pu.clickSelectorClassRegex("button:nth-child(2)", /entry__entry-button/)
+    try {
+      // await pu.clickSelectorTextRegex("button", /Join Room/)
+      // await this.page.waitFor("input")
+      // await pu.clickSelectorClassRegex("button", /Button__accept/)
+      // await this.page.waitFor(200)
+      // await pu.clickSelectorClassRegex("button", /Button__accept/)
+      // await this.page.waitFor(200)
+      // await pu.clickSelectorClassRegex("input", /Tip__dismiss/)
+    }
+    catch (e) {
+      this.oldMode = true
+      await pu.clickSelectorClassRegex("button", /entry__action/)
+      await this.page.waitFor("input")
+      await pu.clickSelectorClassRegex("input", /profile__form-submit/)
+      await this.page.waitFor("button:nth-child(2)")
+      await pu.clickSelectorClassRegex("button:nth-child(2)", /entry__entry-button/)
 
-    try
-    {
+
+      try
+      {
+        await this.page.waitFor(2000)
+        await pu.clickSelectorClassRegex("button", /mic-grant-panel__next/)
+      }
+      catch (e)
+      {
+        // Permission already granted
+      }
+
       await this.page.waitFor(2000)
-      await pu.clickSelectorClassRegex("button", /mic-grant-panel__next/)
+      await pu.clickSelectorClassRegex("button", /enter/)
     }
-    catch (e)
-    {
-      // Permission already granted
-    }
-
-    await this.page.waitFor(2000)
-    await pu.clickSelectorClassRegex("button", /enter/)
 
     this.setName(name)
   }

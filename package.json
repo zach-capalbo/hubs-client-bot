@@ -1,6 +1,6 @@
 {
   "name": "hubs-client-bot",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A puppeteer-based bot library for mozilla hubs",
   "main": "index.js",
   "scripts": {
