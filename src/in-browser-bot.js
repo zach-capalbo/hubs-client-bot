@@ -193,6 +193,13 @@ class InBrowserBot extends EventTarget {
     }})
   }
 
+  /** Sets the avatar that the bot should use.
+      @param url URL pointing to a gltf file for the avatar. Needs to be CORS accessible
+  */
+  async setAvatar(url) {
+    window.APP.componentRegistry['player-info'].find(i => i.isLocalPlayerInfo).el.setAttribute('player-info', 'avatarSrc', url)
+  }
+
   /** Posts a message to the chat */
   async say(message) {
     window.APP.hubChannel.sendMessage(message)

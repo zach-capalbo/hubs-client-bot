@@ -123,7 +123,10 @@ class HubsBot extends EventEmitter {
    *  directly in most cases. It will be done automatically when needed.
   */
   async launchBrowser () {
-    this.browser = await BrowserLauncher.browser({headless: this.headless});
+    this.browser = await BrowserLauncher.browser({
+      headless: this.headless,
+      defaultViewport: this.headless ? undefined : null,
+    });
     this.page = await this.browser.newPage();
 
     if (this.autoLog)
@@ -140,8 +143,9 @@ class HubsBot extends EventEmitter {
    * @param {string} roomUrl The url of the room to join
    * @param {Object} opts
    * @param {string} opts.name Name to set as the bot name when joining the room
+   * @param {boolean} opts.manual If true, will wait for you to manually enter the room, rather than entering automatically
   */
-  async enterRoom(roomUrl, {name} = {}) {
+  async enterRoom(roomUrl, {name, manual = false} = {}) {
     await this.browserLaunched
 
     let parsedUrl = new URL(roomUrl)
@@ -157,50 +161,28 @@ class HubsBot extends EventEmitter {
       name = this.name
     }
 
-    parsedUrl.searchParams.set("bot", "true")
+    if (!manual) {
+      parsedUrl.searchParams.set("bot", "true")
+    }
 
     await this.page.goto(parsedUrl.toString(), {waitUntil: 'domcontentloaded'})
 
-
     await this.page.waitFor(() => NAF.connection.isConnected())
 
-    if (this.headless) {
+    if (this.headless && manual) {
       // Disable rendering for headless, otherwise chromium uses a LOT of CPU
       await this.page.evaluate(() => { AFRAME.scenes[0].renderer.render = function() {} })
     }
 
 
     let pu = new PageUtils(this)
-    try {
-      // await pu.clickSelectorTextRegex("button", /Join Room/)
-      // await this.page.waitFor("input")
-      // await pu.clickSelectorClassRegex("button", /Button__accept/)
-      // await this.page.waitFor(200)
-      // await pu.clickSelectorClassRegex("button", /Button__accept/)
-      // await this.page.waitFor(200)
-      // await pu.clickSelectorClassRegex("input", /Tip__dismiss/)
-    }
-    catch (e) {
-      this.oldMode = true
-      await pu.clickSelectorClassRegex("button", /entry__action/)
-      await this.page.waitFor("input")
-      await pu.clickSelectorClassRegex("input", /profile__form-submit/)
-      await this.page.waitFor("button:nth-child(2)")
-      await pu.clickSelectorClassRegex("button:nth-child(2)", /entry__entry-button/)
 
-
-      try
-      {
-        await this.page.waitFor(2000)
-        await pu.clickSelectorClassRegex("button", /mic-grant-panel__next/)
-      }
-      catch (e)
-      {
-        // Permission already granted
-      }
-
-      await this.page.waitFor(2000)
-      await pu.clickSelectorClassRegex("button", /enter/)
+    if (manual)
+    {
+      await this.page.evaluate(() => APP.scene.addEventListener('entered', () => {window.hasBotEnteredRoom = true; }, {once: true}))
+      console.info("\n\nPlease go ahead and enter the room manually now.\n")
+      await this.page.waitFor(() => window.hasBotEnteredRoom)
+      console.log("***Room has been entered manually****")
     }
 
     this.setName(name)
