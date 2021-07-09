@@ -231,6 +231,9 @@ class InBrowserBot extends EventTarget {
       controller.removeAttribute('visibility-by-path')
       controller.setAttribute("visible", true);
     })
+    this.leftHand = document.querySelector('.left-controller');
+    this.rightHand = document.querySelector('.right-controller');
+    this.head = document.querySelector('#avatar-pov-node');
     this.handsControlled = true
   }
 
@@ -247,20 +250,43 @@ class InBrowserBot extends EventTarget {
       @param {Object|THREE.Vector3} opts.head.position Position of the head
       @param {Object|THREE.Euler} opts.head.rotation Rotation of the head
   */
-  async setAvatarLocations({leftHand, rightHand, head})
+  async setAvatarLocations(opts)
   {
+    let {leftHand, rightHand, head} = opts;
+    
     // await this.controlHands()
-    if (leftHand) {
+    if (leftHand && leftHand.matrix) {
+      this.leftHand.object3D.matrix.fromArray(leftHand.matrix.elements)
+      this.leftHand.object3D.matrix.decompose(
+        this.leftHand.object3D.position,
+        this.leftHand.object3D.quaternion,
+        this.leftHand.object3D.scale
+      )
+    } else if (leftHand) {
       document.querySelector('.left-controller').setAttribute('position', leftHand.position)
       document.querySelector('.left-controller').setAttribute('rotation', leftHand.rotation)
     }
 
-    if (rightHand) {
+    if (rightHand && rightHand.matrix) {
+      this.rightHand.object3D.matrix.fromArray(rightHand.matrix.elements)
+      this.rightHand.object3D.matrix.decompose(
+        this.rightHand.object3D.position,
+        this.rightHand.object3D.quaternion,
+        this.rightHand.object3D.scale
+      )
+    } else if (rightHand) {
       document.querySelector('.right-controller').setAttribute('position', rightHand.position)
       document.querySelector('.right-controller').setAttribute('rotation', rightHand.rotation)
     }
 
-    if (head) {
+    if (head && head.matrix) {
+      this.head.object3D.matrix.fromArray(head.matrix.elements)
+      this.head.object3D.matrix.decompose(
+        this.head.object3D.position,
+        this.head.object3D.quaternion,
+        this.head.object3D.scale
+      )
+    } else if (head) {
       document.querySelector('#avatar-pov-node').setAttribute('rotation', head.rotation)
       document.querySelector('#avatar-pov-node').setAttribute('position', head.position)
     }
