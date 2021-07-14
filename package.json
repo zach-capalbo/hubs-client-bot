@@ -2,9 +2,9 @@
   "name": "hubs-client-bot",
   "version": "0.8.0",
   "description": "A puppeteer-based bot library for mozilla hubs",
-  "main": "index.js",
+  "main": "export-avatars-positions.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node export-avatars-positions.js https://hubs.mozilla.com/xXQWBFd/tattered-dependent-meet/"
   },
   "repository": {
     "type": "git",
@@ -23,9 +23,14 @@
   },
   "homepage": "https://github.com/zach-capalbo/hubs-client-bot#readme",
   "dependencies": {
-    "puppeteer": "^3.0.4"
+    "express": "^4.17.1",
+    "puppeteer": "^3.0.4",
+    "socket.io": "^1.7.4"
   },
   "devDependencies": {
     "documentation": "^13.0.0"
+  },
+  "directories": {
+    "example": "examples"
   }
 }

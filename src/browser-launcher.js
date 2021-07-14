@@ -12,8 +12,8 @@ class BrowserLauncher_ {
       options.headless = true
       options.args = (options.args || []).concat(['--no-sandbox', '--disable-setuid-sandbox'])
     }
-
-    this._browser = puppeteer.launch(options);
+    
+    this._browser = puppeteer.launch({ args: ['--no-sandbox'] });
     return await this._browser
   }
 }
