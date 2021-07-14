@@ -1,7 +1,7 @@
 const {HubsBot} = require('../index.js')
 const fs = require('fs')
 
-// Thanks to Fabien Benetou for https://gist.github.com/Utopiah/273ca366149f0a36c75674dd230980ea
+
 class ImportExportBot extends HubsBot {
   constructor({onlyPinned} = {}) {
     super({
@@ -10,7 +10,9 @@ class ImportExportBot extends HubsBot {
     })
     this.onlyPinned = onlyPinned
   }
-  async exportFromRoom(room) {
+  
+
+  async accessRoom(room) {
     await this.enterRoom(room)
  
     // Wait for network sync. TODO: Add an actual event handler
@@ -20,7 +22,7 @@ class ImportExportBot extends HubsBot {
     return this;
   }
 
-  async exportFromRoom2() {
+  async exportFromRoom() {
     
  
 
@@ -64,7 +66,7 @@ class ImportExportBot extends HubsBot {
   }
 
  async recursiveCall() {
-this.exportFromRoom2().then((o) => process.stdout.write(o)).then(() => this.page.waitFor(5000)).then(() =>this.recursiveCall());
+this.exportFromRoom().then((o) => process.stdout.write(o)).then(() => this.page.waitFor(5000)).then(() =>this.recursiveCall());
 
 }
 
@@ -149,9 +151,9 @@ if (opts.import)
   }
 }
 else {
-  new ImportExportBot(opts).exportFromRoom(opts.roomUrl).then((bot) => bot.recursiveCall());
+  new ImportExportBot(opts).accessRoom(opts.roomUrl).then((bot) => bot.recursiveCall());
 }
 
-setInterval(function(){ process.stdout.write("Hello"); }, 3000);
+setInterval(function(){ process.stdout.write("Wait... "); }, 3000);
 
 
