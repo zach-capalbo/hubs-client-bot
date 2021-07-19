@@ -11,7 +11,7 @@ const {HubsBot} = require('../index.js')
 const fs = require('fs')
 
 
-class ImportExportBot extends HubsBot {
+class ExportAvatarPositionBot extends HubsBot {
   constructor({onlyPinned} = {}) {
     super({
       headless: true,
@@ -35,8 +35,8 @@ class ImportExportBot extends HubsBot {
   async exportFromRoom() {
     
     let objects = this.evaluate( async function prueba(onlyPinned) {
-      var a = "";
-      var b = [];
+      var avatarEntity = "";
+      var avatarPositions = [];
 
       //array with each gltf model
       objArray = await Array.from(document.querySelectorAll("[gltf-model-plus]"));    
@@ -47,16 +47,16 @@ class ImportExportBot extends HubsBot {
         if (objArray[i].classList[0]=="model") {
         
             //As this function returns a promise, we wrap it with await and store the result in a.
-            a = await NAF.utils.getNetworkedEntity(objArray[i]);
+            avatarEntity = await NAF.utils.getNetworkedEntity(objArray[i]);
         
       }
         //add position coordinates to array b.
         if (objArray[i].classList[0]=="model")
-          b.push(a.object3D.position);
+          avatarPositions.push(avatarEntity.object3D.position);
       }
       
 
-      return JSON.stringify(b)
+      return JSON.stringify(avatarPositions)
     }, this.onlyPinned)
 
     
@@ -78,16 +78,7 @@ this.exportFromRoom().then((o) => process.stdout.write(o)).then(() => this.page.
 
 function usage() {
   console.error(`
-Usage: node examples/export-bot.js ROOM_URL [--import [JSON_FILE]]
-  --import [JSON_FILE] If specified, imports the objects from the given JSON
-                       file, otherwise imports from STDIN
-  --print              Used with --import. Prints JavaScript code to STDOUT that
-                       can be copied to the developer console in a Hubs Room to
-                       import the objects
-  --only-pinned         Only export pinned objects
-**Note**: Currently, when importing without the --print option, the bot must
-          remain running and connected to the room, otherwise the objects
-          spawned will disappear.
+Usage: node examples/export-avatars-positions.js ROOM_URL
 `)
   process.exit(-1)
 }
@@ -106,19 +97,7 @@ function parseOpts() {
     }
 
     switch (arg) {
-    case '--import':
-      opts.import = true
-      if (!(args[i + 1] || "").startsWith('--'))
-      {
-        opts.jsonFile = args[++i]
-      }
-      break;
-    case '--print':
-      opts.print = true
-      break
-    case '--only-pinned':
-      opts.onlyPinned = true
-      break
+    // TODO: Add additional arguments in future
     default:
       usage()
     }
@@ -139,7 +118,7 @@ function parseOpts() {
 let opts = parseOpts()
 
 //Create a Bot, then access room, then continuously call to export 
-new ImportExportBot(opts).accessRoom(opts.roomUrl).then((bot) => bot.recursiveCall());
+new ExportAvatarPositionBot(opts).accessRoom(opts.roomUrl).then((bot) => bot.recursiveCall());
 
 //Wait message
 setInterval(function(){ process.stdout.write("Wait... "); }, 3000);
