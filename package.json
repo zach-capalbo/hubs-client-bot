@@ -27,5 +27,8 @@
   },
   "devDependencies": {
     "documentation": "^13.0.0"
+  },
+  "directories": {
+    "example": "examples"
   }
 }
